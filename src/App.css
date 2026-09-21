@@ -12,7 +12,7 @@ h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
 .screen-center .card { max-width: 360px; width: 100%; }
 select, input { border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; font-size: 14px; width: 100%; }
 .form-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 10px; }
-@media (min-width: 500px) { .form-grid { grid-template-columns: repeat(3, 1fr); } .span-3 { grid-column: span 3; } }
+@media (min-width: 500px) { .form-grid { grid-template-columns: repeat(3, 1fr); } .span-3 { grid-column: span 3; } .span-2 { grid-column: span 2; } }
 .toggle-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
 .toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; border: none; border-radius: 999px; padding: 7px 12px; background: #f1f5f9; color: #475569; cursor: pointer; }
 .toggle-active { background: #0f172a; color: #fff; }
@@ -47,7 +47,9 @@ h2 { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap:
 .candidate-row { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; font-size: 13px; }
 .paperwork-row { display: flex; justify-content: space-between; align-items: center; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 10px 14px; }
 .paperwork-row p { margin: 0; font-size: 13px; }
-.filed-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; margin-top: 6px; }
+.filed-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; color: #64748b; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; margin-top: 6px; }
+.filed-row span:first-child { display: flex; align-items: center; gap: 6px; }
+.expand-btn { margin-top: 6px; }
 .footnote { font-size: 11px; color: #94a3b8; margin-top: 32px; line-height: 1.5; }
 section { margin-bottom: 24px; }
 .mt { margin-top: 12px; }
