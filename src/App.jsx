@@ -4,8 +4,70 @@ import { supabase } from "./supabaseClient";
 
 // ---- Roster structure: 6-day R/O/A/B/C/N cycle, teams offset by 1 day ----
 const CYCLE = ["R", "O", "A", "B", "C", "N"];
-const SHIFT_LABEL = { R: "Rest", O: "Off", A: "14:00–22:00", B: "12:00–20:00", C: "08:00–16:00", N: "20:00–08:00 (night)" };
-const WORKING = new Set(["A", "B", "C", "N"]);
+const SHIFT_LABEL = {
+  R: "Rest", O: "Off", A: "14:00–22:00", B: "12:00–20:00", C: "08:00–16:00", N: "20:00–08:00 (night)",
+  B2: "12:00–20:00 (B2)", B3: "12:00–20:00 (B3)", C2: "08:00–16:00 (C2)", C3: "08:00–16:00 (C3)",
+  U: "Unconfirmed",
+  "12pm-8pm": "12:00–20:00", "8am-4pm": "08:00–16:00", "8pm-2am": "20:00–02:00 (night)",
+  "8am-2pm": "08:00–14:00", "12pm-6pm": "12:00–18:00",
+};
+const WORKING = new Set([
+  "A", "B", "C", "N", "B2", "B3", "C2", "C3", "U",
+  "12pm-8pm", "8am-4pm", "8pm-2am", "8am-2pm", "12pm-6pm",
+]);
+// Shift codes that start at 08:00, same as when a Night shift ends — no one
+// should go straight from a Night shift into one of these the next day.
+const C_START_CODES = new Set(["C", "C2", "C3", "8am-4pm", "8am-2pm"]);
+// Night-type codes (the standard N, plus Nicola's equivalent 8pm-2am). A
+// Night shift and a C-type shift don't overlap in time on the same day —
+// C finishes hours before Night starts — so someone already on one can
+// still take the other. A or B shifts DO overlap or run right up against
+// a Night shift, so those stay blocked.
+const NIGHT_CODES = new Set(["N", "8pm-2am"]);
+
+// ---- HST-only rule, verified against the Trainee Mega Sheet: within each
+// team, one of every pair of people sharing a "B day" actually works it as a
+// C shift (08:00–16:00) every 12 days, and the other person in the pair
+// works the alternate occurrence as C instead. This is a fixed per-person
+// assignment (confirmed unchanged for the whole recorded period, except
+// Gilbert Tanti, who moved from residue 4 to residue 10 and is kept on 10 —
+// his current, ongoing assignment). Value = dayOffset % 12 on which that
+// person's B shift is actually worked as C.
+const HST_B_TO_C_RESIDUE = {
+  "Maxine Ciantar": 9, "Sean Kelley": 3, "Rachelle Attard": 9, "Jerome Spiteri": 3,
+  "Martina Spiteri Bailey": 2, "Russel Sapiano": 8, "Chantelle Said": 8, "Lisa Massa": 2,
+  "Rowena Zrinzo": 1, "Nicholas Fava": 7, "Natasha Mifsud": 1, "Alexandra Galea": 7,
+  "Maria Cutajar": 6, "Denise Gatt": 0, "Greta Attard": 6, "Diane-Maria Borg": 0,
+  "Alannah Bonello": 5, "Nicholas Vella": 11, "Kimberly Micallef": 11, "Daniel Cassar": 5, "Rebekah Scerri": 11,
+  "Kimberley Hallett": 4, "Jessica Chetcuti Saydon": 10, "Sarah Scerri": 4, "Jacob Micallef Tanti": 10, "Gilbert Tanti": 10,
+};
+
+// ---- Staff on ad-hoc/irregular schedules, not the fixed 6-day cycle ----
+// Their actual recorded shifts (from the real roster) are used where known;
+// any day without a recorded entry defaults to "U" (unconfirmed) so they are
+// never wrongly offered as available for a swap.
+const MANUAL_SCHEDULES = {
+  "Stephanie Magri": {"2026-06-23":"B3","2026-06-25":"C3","2026-06-26":"C2","2026-06-28":"B2","2026-06-29":"C3","2026-07-01":"C2","2026-07-03":"C3","2026-07-04":"C","2026-07-06":"C2","2026-07-07":"C3","2026-07-08":"C3","2026-07-11":"B2","2026-07-12":"C","2026-07-13":"C2","2026-07-14":"C","2026-07-15":"B3","2026-07-21":"C2","2026-07-22":"B3","2026-07-23":"C3","2026-07-27":"C3","2026-07-28":"C3","2026-07-30":"B3","2026-07-31":"C3","2026-08-03":"C2","2026-08-04":"C2","2026-08-07":"C3","2026-08-10":"B3","2026-08-11":"C3","2026-08-13":"C2","2026-08-14":"C3","2026-08-16":"B3","2026-08-18":"B3","2026-08-20":"C3","2026-08-21":"C2","2026-08-23":"B2","2026-08-24":"C3","2026-08-26":"C2","2026-08-28":"C3","2026-08-29":"C","2026-08-31":"C2","2026-09-01":"C3","2026-09-02":"C3","2026-09-05":"B2","2026-09-06":"C","2026-09-07":"C2","2026-09-08":"C","2026-09-09":"B3"},
+};
+// These staff don't belong to a fixed team, so they carry no phone-book team entry above.
+const MANUAL_STAFF = [
+  { name: "Nicola Lanfranco", phone: "+35679611911", grade: "HST", weeklyPattern: true },
+  { name: "Stephanie Magri", phone: "+35679010047", grade: "HST" },
+];
+
+// ---- Nicola Lanfranco's confirmed proposed roster: a repeating 6-week cycle,
+// Monday-first. Week 1 starts Monday 17 Aug 2026 (confirmed: this week,
+// starting Mon 21 Sep 2026, is Week 6, which has her on 12pm-6pm this Friday).
+const WEEKLY_PATTERN_ANCHOR = new Date(2026, 7, 17);
+WEEKLY_PATTERN_ANCHOR.setHours(0, 0, 0, 0);
+const WEEKLY_PATTERN = [
+  ["12pm-8pm", "8am-4pm", "8pm-2am", null, null, null, "8am-2pm"],
+  ["12pm-8pm", "8am-4pm", "8pm-2am", null, null, "12pm-6pm", null],
+  ["12pm-8pm", "8am-4pm", "8pm-2am", null, null, "8am-2pm", null],
+  ["12pm-8pm", "8am-4pm", "8pm-2am", null, null, null, "12pm-6pm"],
+  ["12pm-8pm", "8am-4pm", "8pm-2am", null, "8am-2pm", null, null],
+  ["12pm-8pm", "8am-4pm", "8pm-2am", null, "12pm-6pm", null, null],
+];
 
 // ---- Replace these with your real staff + phone numbers ----
 const BST_TEAMS = [
@@ -42,23 +104,58 @@ const RANGE_DAYS = Math.round((FOUR_MONTHS_FROM_TODAY - TODAY) / (1000 * 60 * 60
 const GRADES = ["BST", "HST"];
 const POST_CODES = ["A", "B", "C", "N"];
 
-function dateStr(offset) {
+function offsetToDate(offset) {
   const d = new Date(START);
   d.setDate(d.getDate() + offset);
-  return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  return d;
+}
+
+function dateStr(offset) {
+  return offsetToDate(offset).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+}
+
+function isoDateForOffset(offset) {
+  const d = offsetToDate(offset);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function buildStaff() {
   const staff = [];
   BST_TEAMS.forEach((members, teamIdx) => members.forEach(([name, phone]) => staff.push({ name, phone, grade: "BST", teamIdx })));
   HST_TEAMS.forEach((members, teamIdx) => members.forEach(([name, phone]) => staff.push({ name, phone, grade: "HST", teamIdx })));
+  MANUAL_STAFF.forEach(({ name, phone, grade, weeklyPattern }) => staff.push({ name, phone, grade, manual: true, weeklyPattern }));
   return staff;
 }
 
+function weeklyPatternState(dayOffset) {
+  const date = offsetToDate(dayOffset);
+  const diffDays = Math.round((date - WEEKLY_PATTERN_ANCHOR) / (1000 * 60 * 60 * 24));
+  const weekIdx = (((Math.floor(diffDays / 7)) % 6) + 6) % 6;
+  const dayIdx = ((diffDays % 7) + 7) % 7; // 0 = Monday .. 6 = Sunday
+  return WEEKLY_PATTERN[weekIdx][dayIdx] || "O";
+}
+
 function baseState(person, dayOffset) {
+  if (person.weeklyPattern) {
+    return weeklyPatternState(dayOffset);
+  }
+  if (person.manual) {
+    const schedule = MANUAL_SCHEDULES[person.name] || {};
+    return schedule[isoDateForOffset(dayOffset)] || "U";
+  }
   const n = CYCLE.length;
-  const idx = (((dayOffset - person.teamIdx) % n) + n) % n;
-  return CYCLE[idx];
+  // Verified against the real roster (Trainee Mega Sheet): each team's
+  // offset advances the cycle forward, not backward.
+  const idx = (((dayOffset + person.teamIdx) % n) + n) % n;
+  const code = CYCLE[idx];
+  if (code === "B" && person.grade === "HST" && HST_B_TO_C_RESIDUE[person.name] !== undefined) {
+    const residue = ((dayOffset % 12) + 12) % 12;
+    if (residue === HST_B_TO_C_RESIDUE[person.name]) return "C";
+  }
+  return code;
 }
 
 function waLink(phone, text) {
@@ -67,7 +164,9 @@ function waLink(phone, text) {
 }
 
 export default function App() {
-  const staff = useMemo(() => buildStaff(), []);
+  // Sorted alphabetically for the dropdowns; each person still carries their
+  // own teamIdx/grade, so this has no effect on shift-cycle calculations.
+  const staff = useMemo(() => buildStaff().sort((a, b) => a.name.localeCompare(b.name)), []);
 
   // Identity: a real browser now, so plain localStorage is the right tool (no Claude-artifact storage API needed here).
   const [currentUser, setCurrentUser] = useState(() => localStorage.getItem("current_user"));
@@ -138,7 +237,19 @@ export default function App() {
     if (req.kind === "cover" && name === req.name) return false;
     const person = staff.find((s) => s.name === name);
     if (!person || person.grade !== req.grade) return false;
-    return !WORKING.has(stateOf(name, req.day));
+    const existing = stateOf(name, req.day);
+    if (WORKING.has(existing)) {
+      // Only exception: already having a Night shift doesn't block taking a
+      // C-type shift the same day (and vice versa) — they don't overlap.
+      const nightAndC =
+        (NIGHT_CODES.has(existing) && C_START_CODES.has(req.code)) ||
+        (C_START_CODES.has(existing) && NIGHT_CODES.has(req.code));
+      if (!nightAndC) return false;
+    }
+    // No one should go straight from a Night shift into a shift starting at
+    // 08:00 the next day (C/C2/C3) — zero rest in between.
+    if (C_START_CODES.has(req.code) && stateOf(name, req.day - 1) === "N") return false;
+    return true;
   }
 
   function eligibleFor(req) {
