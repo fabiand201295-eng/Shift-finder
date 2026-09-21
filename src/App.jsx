@@ -26,7 +26,10 @@ const HST_TEAMS = [
 ];
 
 const START = new Date(2026, 5, 22);
-const DAYS = 10;
+// Show shifts up to 4 calendar months ahead.
+const FOUR_MONTHS_OUT = new Date(START);
+FOUR_MONTHS_OUT.setMonth(FOUR_MONTHS_OUT.getMonth() + 4);
+const DAYS = Math.round((FOUR_MONTHS_OUT - START) / (1000 * 60 * 60 * 24));
 const GRADES = ["BST", "HST"];
 const POST_CODES = ["A", "B", "C", "N"];
 
@@ -69,10 +72,20 @@ export default function App() {
 
   const [extraNameToAdd, setExtraNameToAdd] = useState(staff[0].name);
   const [kind, setKind] = useState("cover");
-  const [coverForm, setCoverForm] = useState({ name: staff[0].name, day: 2 });
+  const [coverDay, setCoverDay] = useState(2);
   const [extraForm, setExtraForm] = useState({ grade: "BST", day: 2, code: "N" });
   const [reason, setReason] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [confirmUndoId, setConfirmUndoId] = useState(null);
+  const [expandedRequests, setExpandedRequests] = useState(new Set());
+
+  function toggleExpanded(id) {
+    setExpandedRequests((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
 
   function chooseIdentity(name) {
     setCurrentUser(name);
@@ -141,12 +154,12 @@ export default function App() {
   }
 
   async function postCoverRequest() {
-    const person = staff.find((s) => s.name === coverForm.name);
-    const code = stateOf(coverForm.name, coverForm.day);
+    const person = staff.find((s) => s.name === currentUser);
+    const code = stateOf(currentUser, coverDay);
     if (!WORKING.has(code)) return;
-    if (requests.some((r) => r.kind === "cover" && r.name === coverForm.name && r.day === coverForm.day && !r.covered_by)) return;
+    if (requests.some((r) => r.kind === "cover" && r.name === currentUser && r.day === coverDay && !r.covered_by)) return;
     await supabase.from("requests").insert({
-      kind: "cover", name: person.name, grade: person.grade, day: coverForm.day, code, reason, posted_by: currentUser,
+      kind: "cover", name: person.name, grade: person.grade, day: coverDay, code, reason, posted_by: currentUser,
     });
     setReason("");
     loadAll();
@@ -242,16 +255,13 @@ export default function App() {
 
         {kind === "cover" ? (
           <div className="form-grid">
-            <select value={coverForm.name} onChange={(e) => setCoverForm((f) => ({ ...f, name: e.target.value }))}>
-              {staff.map((s) => <option key={s.name} value={s.name}>{s.name} ({s.grade})</option>)}
-            </select>
-            <select value={coverForm.day} onChange={(e) => setCoverForm((f) => ({ ...f, day: Number(e.target.value) }))}>
+            <select value={coverDay} onChange={(e) => setCoverDay(Number(e.target.value))}>
               {Array.from({ length: DAYS }).map((_, d) => {
-                const code = stateOf(coverForm.name, d);
+                const code = stateOf(currentUser, d);
                 return <option key={d} value={d} disabled={!WORKING.has(code)}>{dateStr(d)} — {WORKING.has(code) ? SHIFT_LABEL[code] : "not working"}</option>;
               })}
             </select>
-            <input placeholder="Reason (optional)" value={reason} onChange={(e) => setReason(e.target.value)} />
+            <input className="span-2" placeholder="Reason (optional)" value={reason} onChange={(e) => setReason(e.target.value)} />
           </div>
         ) : (
           <div className="form-grid">
@@ -328,19 +338,23 @@ export default function App() {
                     Already rostered on this shift ({already.length}): {already.length ? already.map((s) => s.name).join(", ") : "no one — this slot is currently empty"}
                   </p>
                 )}
-                <p className="muted small">{candidates.length} eligible, same grade, free that day — starred want extra shifts:</p>
-                <div className="stack small-gap">
-                  {candidates.length === 0 && <span className="muted small">No one free that day.</span>}
-                  {candidates.map((c) => (
-                    <div key={c.name} className="candidate-row">
-                      <span>{wantsExtra.has(c.name) && <Star size={11} className="icon-amber-fill" />} {c.name}</span>
-                      <div className="inline-row">
-                        <a className="btn btn-whatsapp" href={waLink(c.phone, msg)} target="_blank" rel="noreferrer"><MessageCircle size={12} /> WhatsApp</a>
-                        <button className="btn btn-plain" onClick={() => accept(r, c)}><Check size={12} /> Confirm</button>
+                <button className="link-btn expand-btn" onClick={() => toggleExpanded(r.id)}>
+                  {expandedRequests.has(r.id) ? "Hide" : "See"} who can swap ({candidates.length} eligible)
+                </button>
+                {expandedRequests.has(r.id) && (
+                  <div className="stack small-gap mt">
+                    {candidates.length === 0 && <span className="muted small">No one free that day.</span>}
+                    {candidates.map((c) => (
+                      <div key={c.name} className="candidate-row">
+                        <span>{wantsExtra.has(c.name) && <Star size={11} className="icon-amber-fill" />} {c.name}</span>
+                        <div className="inline-row">
+                          <a className="btn btn-whatsapp" href={waLink(c.phone, msg)} target="_blank" rel="noreferrer"><MessageCircle size={12} /> WhatsApp</a>
+                          <button className="btn btn-plain" onClick={() => accept(r, c)}><Check size={12} /> Confirm</button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -358,7 +372,18 @@ export default function App() {
                 <p><strong>{r.covered_by}</strong> covers {r.kind === "cover" ? `${r.name}'s` : "the extra"} {SHIFT_LABEL[r.code]}</p>
                 <p className="muted small">{dateStr(r.day)} · {r.grade}</p>
               </div>
-              <button className="btn btn-danger" onClick={() => markPaperworkDone(r)}><Check size={12} /> Mark filed</button>
+              {confirmUndoId === r.id ? (
+                <div className="inline-row small">
+                  <span className="muted">Undo swap?</span>
+                  <button className="btn btn-danger" onClick={() => { removeRequest(r); setConfirmUndoId(null); }}>Yes, undo</button>
+                  <button className="btn btn-plain" onClick={() => setConfirmUndoId(null)}>Cancel</button>
+                </div>
+              ) : (
+                <div className="inline-row small">
+                  <button className="btn btn-plain" onClick={() => setConfirmUndoId(r.id)}><X size={12} /> Remove</button>
+                  <button className="btn btn-danger" onClick={() => markPaperworkDone(r)}><Check size={12} /> Mark filed</button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -367,7 +392,16 @@ export default function App() {
             <summary className="muted small">Filed ({paperworkFiled.length})</summary>
             {paperworkFiled.map((r) => (
               <div key={r.id} className="filed-row">
-                <FileCheck size={12} className="icon-emerald" /> {r.covered_by} covers {r.kind === "cover" ? `${r.name}'s` : "the extra"} {SHIFT_LABEL[r.code]} · {dateStr(r.day)}
+                <span><FileCheck size={12} className="icon-emerald" /> {r.covered_by} covers {r.kind === "cover" ? `${r.name}'s` : "the extra"} {SHIFT_LABEL[r.code]} · {dateStr(r.day)}</span>
+                {confirmUndoId === r.id ? (
+                  <span className="inline-row small">
+                    <span className="muted">Undo?</span>
+                    <button className="btn btn-danger" onClick={() => { removeRequest(r); setConfirmUndoId(null); }}>Yes</button>
+                    <button className="btn btn-plain" onClick={() => setConfirmUndoId(null)}>Cancel</button>
+                  </span>
+                ) : (
+                  <button className="icon-btn" onClick={() => setConfirmUndoId(r.id)} aria-label="Remove"><X size={13} /></button>
+                )}
               </div>
             ))}
           </details>
