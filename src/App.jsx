@@ -9,27 +9,36 @@ const WORKING = new Set(["A", "B", "C", "N"]);
 
 // ---- Replace these with your real staff + phone numbers ----
 const BST_TEAMS = [
-  [["Andrew Portelli", "+35679010001"], ["Aaron Okuns", "+35679010002"], ["Jerome Abdilla", "+35679010003"], ["Fabian Debono", "+35679010004"], ["Harley Schembri", "+35679010005"], ["Rebecca Attard", "+35679010006"], ["Aneesh Pande", "+35679010007"], ["Mohammad Nouzari", "+35679010008"]],
-  [["Waad Osman", "+35679010009"], ["Zeinab Nasser", "+35679010010"], ["Jonathan Joseph Barbara", "+35679010011"], ["Damilola Dickson Tunde", "+35679010012"], ["Brooke Falzon", "+35679010013"], ["Nicola Cassar", "+35679010014"], ["Mohammed Osman", "+35679010015"], ["Yazan Suyyagh", "+35679010016"]],
-  [["Bernard Briffa", "+35679010017"], ["Helenna Chinda", "+35679010018"], ["Monica Cutajar", "+35679010019"], ["Daniel Curmi", "+35679010020"], ["Jeremy Bugeja", "+35679010021"], ["Benjamin Ciantar", "+35679010022"], ["Raquel Pace", "+35679010023"], ["Mariam Opadiya", "+35679010024"]],
-  [["Melania Formosa", "+35679010025"], ["Lydon Farrugia", "+35679010026"], ["Alexander Attard Littschwager", "+35679010027"], ["Gwendolyn Johnson", "+35679010028"], ["Mark John Mallia", "+35679010029"], ["Rebecca Auta", "+35679010030"], ["Oluwabunmi Joy Adedoye", "+35679010031"], ["Muhammad Hamouz", "+35679010032"]],
-  [["Ali Al-khazaali", "+35679010033"], ["Bahaa Al Khatab", "+35679010034"], ["Matthew Tabone", "+35679010035"], ["Mireille Domenique Grixti", "+35679010036"], ["Omar Ellaboudy", "+35679010037"], ["Naomi Saro", "+35679010038"], ["Deepshikta Gupta", "+35679010039"]],
-  [["Jasmine Mariani", "+35679010040"], ["Jennifer Cassar", "+35679010041"], ["Mattea Coppini", "+35679010042"], ["Moyinoluwa Oyejola", "+35679010043"], ["Corina Pace", "+35679010044"], ["Xin Yuan Lim", "+35679010045"], ["Edikan Bathel Udo", "+35679010046"]],
+  [["Andrew Portelli", "+35679344600"], ["Aaron Okuns", "+35677351150"], ["Jerome Abdilla", "+35679220398"], ["Fabian Debono", "+35679806185"], ["Harley Schembri", "+35679865680"], ["Rebecca Attard", "+35699041184"], ["Aneesh Pande", "+35699398979"], ["Mohammad Nouzari", "+971501535246"]],
+  [["Waad Osman", "+35699709137"], ["Zeinab Nasser", "+35699668369"], ["Jonathan Joseph Barbara", "+35679456462"], ["Brooke Falzon", "+35699219896"], ["Nicola Cassar", "+35699907449"], ["Mohammed Osman", "+35699078563"], ["Yazan Suyyagh", "+35679548172"]],
+  [["Bernard Briffa", "+35677911209"], ["Helenna Chinda", "+35677102489"], ["Monica Cutajar", "+35679415177"], ["Daniel Curmi", "+35679949439"], ["Jeremy Bugeja", "+35699255790"], ["Benjamin Ciantar", "+35679289743"], ["Raquel Pace", "+35679321375"], ["Mariam Opadiya", "+35699350267"]],
+  [["Melania Formosa", "+35677595421"], ["Lydon Farrugia", "+35679945203"], ["Alexander Attard Littschwager", "+35699130055"], ["Gwendolyn Johnson", "+48514650542"], ["Mark John Mallia", "+35679288114"], ["Rebecca Auta", "+35677153651"], ["Oluwabunmi Joy Adedoye", "+48731366035"], ["Muhammad Hamouz", "+48664207412"]],
+  [["Ali Al-khazaali", "+35677022117"], ["Bahaa Al Khatab", "+48518559280"], ["Matthew Tabone", "+35679971305"], ["Mireille Domenique Grixti", "+35679217421"], ["Omar Ellaboudy", "+971509319210"], ["Naomi Saro", "+35677195833"], ["Deepshikta Gupta", "+918585975488"]],
+  [["Jasmine Mariani", "+35699063206"], ["Jennifer Cassar", "+35677889204"], ["Mattea Coppini", "+35679232810"], ["Moyinoluwa Oyejola", "+35677114377"], ["Corina Pace", "+35699027341"], ["Xin Yuan Lim", "+35699362328"], ["Edikan Bathel Udo", "+48500087314"]],
 ];
 const HST_TEAMS = [
-  [["Maxine Ciantar", "+35679020001"], ["Sean Kelley", "+35679020002"], ["Rachelle Attard", "+35679020003"], ["Jerome Spiteri", "+35679020004"]],
-  [["Martina Spiteri Bailey", "+35679020005"], ["Russel Sapiano", "+35679020006"], ["Chantelle Said", "+35679020007"], ["Lisa Massa", "+35679020008"]],
-  [["Rowena Zrinzo", "+35679020009"], ["Nicholas Fava", "+35679020010"], ["Natasha Mifsud", "+35679020011"], ["Alexandra Galea", "+35679020012"]],
-  [["Maria Cutajar", "+35679020013"], ["Denise Gatt", "+35679020014"], ["Greta Attard", "+35679020015"], ["Diane-Maria Borg", "+35679020016"]],
-  [["Alannah Bonello", "+35679020017"], ["Nicholas Vella", "+35679020018"], ["Kimberly Micallef", "+35679020019"], ["Daniel Cassar", "+35679020020"], ["Rebekah Scerri", "+35679020021"]],
-  [["Kimberley Hallett", "+35679020022"], ["Jessica Chetcuti Saydon", "+35679020023"], ["Sarah Scerri", "+35679020024"], ["Jacob Micallef Tanti", "+35679020025"], ["Gilbert Tanti", "+35679020026"]],
+  [["Maxine Ciantar", "+35699868222"], ["Sean Kelley", "+35679340629"], ["Rachelle Attard", "+35679823805"], ["Jerome Spiteri", "+35679310695"]],
+  [["Martina Spiteri Bailey", "+35679445515"], ["Russel Sapiano", "+35679290596"], ["Chantelle Said", "+35699045666"], ["Lisa Massa", "+35699834713"]],
+  [["Rowena Zrinzo", "+35699075459"], ["Nicholas Fava", "+35679445434"], ["Natasha Mifsud", "+35699268649"], ["Alexandra Galea", "+35679951127"]],
+  [["Maria Cutajar", "+35679960127"], ["Denise Gatt", "+35699837279"], ["Greta Attard", "+35699049416"], ["Diane-Maria Borg", "+35679257390"]],
+  [["Alannah Bonello", "+35699130938"], ["Nicholas Vella", "+35679558887"], ["Kimberly Micallef", "+35679992444"], ["Daniel Cassar", "+35699659195"], ["Rebekah Scerri", "+35679001398"]],
+  [["Kimberley Hallett", "+35699034501"], ["Jessica Chetcuti Saydon", "+35679211470"], ["Sarah Scerri", "+35679806941"], ["Jacob Micallef Tanti", "+35699839464"], ["Gilbert Tanti", "+35677638172"]],
 ];
 
+// Fixed anchor for the roster cycle math — never change this, or every
+// already-posted request's stored day-offset will point at the wrong date.
 const START = new Date(2026, 5, 22);
-// Show shifts up to 4 calendar months ahead.
-const FOUR_MONTHS_OUT = new Date(START);
-FOUR_MONTHS_OUT.setMonth(FOUR_MONTHS_OUT.getMonth() + 4);
-const DAYS = Math.round((FOUR_MONTHS_OUT - START) / (1000 * 60 * 60 * 24));
+START.setHours(0, 0, 0, 0);
+
+const TODAY = new Date();
+TODAY.setHours(0, 0, 0, 0);
+
+// The day pickers start today and run 4 calendar months ahead, expressed as
+// offsets from START so they line up with the fixed cycle above.
+const TODAY_OFFSET = Math.max(0, Math.round((TODAY - START) / (1000 * 60 * 60 * 24)));
+const FOUR_MONTHS_FROM_TODAY = new Date(TODAY);
+FOUR_MONTHS_FROM_TODAY.setMonth(FOUR_MONTHS_FROM_TODAY.getMonth() + 4);
+const RANGE_DAYS = Math.round((FOUR_MONTHS_FROM_TODAY - TODAY) / (1000 * 60 * 60 * 24));
 const GRADES = ["BST", "HST"];
 const POST_CODES = ["A", "B", "C", "N"];
 
@@ -72,8 +81,8 @@ export default function App() {
 
   const [extraNameToAdd, setExtraNameToAdd] = useState(staff[0].name);
   const [kind, setKind] = useState("cover");
-  const [coverDay, setCoverDay] = useState(2);
-  const [extraForm, setExtraForm] = useState({ grade: "BST", day: 2, code: "N" });
+  const [coverDay, setCoverDay] = useState(TODAY_OFFSET + 2);
+  const [extraForm, setExtraForm] = useState({ grade: "BST", day: TODAY_OFFSET + 2, code: "N" });
   const [reason, setReason] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [confirmUndoId, setConfirmUndoId] = useState(null);
@@ -256,7 +265,8 @@ export default function App() {
         {kind === "cover" ? (
           <div className="form-grid">
             <select value={coverDay} onChange={(e) => setCoverDay(Number(e.target.value))}>
-              {Array.from({ length: DAYS }).map((_, d) => {
+              {Array.from({ length: RANGE_DAYS }).map((_, i) => {
+                const d = TODAY_OFFSET + i;
                 const code = stateOf(currentUser, d);
                 return <option key={d} value={d} disabled={!WORKING.has(code)}>{dateStr(d)} — {WORKING.has(code) ? SHIFT_LABEL[code] : "not working"}</option>;
               })}
@@ -269,7 +279,7 @@ export default function App() {
               {GRADES.map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
             <select value={extraForm.day} onChange={(e) => setExtraForm((f) => ({ ...f, day: Number(e.target.value) }))}>
-              {Array.from({ length: DAYS }).map((_, d) => <option key={d} value={d}>{dateStr(d)}</option>)}
+              {Array.from({ length: RANGE_DAYS }).map((_, i) => { const d = TODAY_OFFSET + i; return <option key={d} value={d}>{dateStr(d)}</option>; })}
             </select>
             <select value={extraForm.code} onChange={(e) => setExtraForm((f) => ({ ...f, code: e.target.value }))}>
               {POST_CODES.map((c) => <option key={c} value={c}>{SHIFT_LABEL[c]}</option>)}
